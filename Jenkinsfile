@@ -26,12 +26,13 @@ pipeline {
 
                     // Mount the workspace directory and set the user
                     tfContainer.inside(
-                      --entrypoint='',
-                      user:'1001:1001'
-                     ) {
-                        sh "cp -r /workspace/* ."
-                        sh '--version'
+                      entrypoint: '',
+                      user: '1001:1001'
+                    ) {
+                       sh "cp -r /workspace/* ."
+                       sh '--version'
                     }
+
                 }
             }
         }
