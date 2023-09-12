@@ -25,10 +25,10 @@ pipeline {
 
         stage('Pull and Run Terraform Docker Image') {
             steps {
-              docker.image('hashicorp/terraform:latest').withRun('-v usr/local/bin:usr/local/bin ''-u 1001:1001')
-               { c ->
+             docker.image('hashicorp/terraform:latest').inside("-v usr/local/bin:usr/local/bin -u 1001:1001")
+             {
                 sh 'terraform --version'
-                }            
+             }
             
             }
         }
