@@ -6,14 +6,7 @@ pipeline {
     stages {
         stage('Pull and Run Terraform Docker Image') {
             steps {
-                // Define the Docker image name and tag
-                //def dockerImage = 'hashicorp/terraform:latest'
-
-                // Pull the Docker image from Docker Hub
-                sh "docker pull hashicorp/terraform:latest"
-
-                // Run a Docker container using the pulled image
-                sh "docker run -it --rm hashicorp/terraform:latest terraform --version"
+              docker.image('terraform-image:latest').withRun('-v usr/local/bin:usr/local/bin ''-u 1001:1001')
             }
         }
 
