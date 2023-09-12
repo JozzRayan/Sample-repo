@@ -25,14 +25,23 @@ pipeline {
 
         stage('Pull and Run Terraform Docker Image') {
             steps {
+                // Run a Docker container using the pulled image with volume and user
                 // Define the Docker image name and tag
-                //def dockerImage = 'hashicorp/terraform:latest'
+                def dockerImage = 'hashicorp/terraform:latest'
 
-                // Pull the Docker image from Docker Hub
-                sh "docker pull hashicorp/terraform:latest"
+                // Use the Jenkins workspace as the code path
+                def workspacePath = pwd()
 
-                // Run a Docker container using the pulled image
-                sh "docker run -it --rm hashicorp/terraform:latest  --version"
+                // Define the container work directory
+                def workDir = '/terraform/project'
+
+                // Run a Docker container using the pulled image with mounted workspace
+                sh """
+                    docker run -it --rm \\
+                    -v ${workspacePath}:${workDir} \\
+                    -w ${workDir} \\
+                    ${dockerImage} terraform --version
+                """
             }
         }
 
