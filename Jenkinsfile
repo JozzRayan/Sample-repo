@@ -21,19 +21,12 @@ pipeline {
 
         stage('Pull and Run Terraform Docker Image') {
             steps {
-                script {
-                    def tfContainer = docker.image('hashicorp/terraform:latest')
+                
+                   docker.image('hashicorp/terraform:latest').inside('-v /usr/local/bin:/usr/local/bin -u jenkins') { c ->
+                /* Run Terraform commands here */
+                     sh 'terraform --version'               
 
-                    // Mount the workspace directory and set the user
-                    tfContainer.inside(
-                      entrypoint: '',
-                      user: '1001:1001'
-                    ) {
-                       sh "cp -r /workspace/* ."
-                       sh '--version'
-                    }
-
-                }
+                
             }
         }
 
