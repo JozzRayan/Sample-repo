@@ -25,23 +25,13 @@ pipeline {
 
         stage('Pull and Run Terraform Docker Image') {
             steps {
-                // Run a Docker container using the pulled image with volume and user
-                // Define the Docker image name and tag
-                def dockerImage = 'hashicorp/terraform:latest'
-
-                // Use the Jenkins workspace as the code path
-                def workspacePath = pwd()
-
-                // Define the container work directory
-                def workDir = '/terraform/project'
-
-                // Run a Docker container using the pulled image with mounted workspace
-                sh """
-                    docker run -it --rm \\
-                    -v ${workspacePath}:${workDir} \\
-                    -w ${workDir} \\
-                    ${dockerImage} terraform --version
-                """
+                 sh """
+                    docker run -d \
+                        --name 'tf-container' \
+                        -v ${WORKSPACE}:/workspace \ # Mount your Git code into /workspace in the container
+                        -w /workspace \ # Set the working directory in the container to /workspace
+                        terraform-image:latest # Replace with the actual Terraform Docker image
+                    """
             }
         }
 
