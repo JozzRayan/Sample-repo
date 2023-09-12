@@ -25,7 +25,7 @@ pipeline {
                     def tfContainer = docker.image('hashicorp/terraform:latest')
 
                     // Mount the workspace directory and set the user
-                    tfContainer.inside("-u '1001:1001'") {
+                    tfContainer.inside("--entrypoint='' -u '1001:1001'") {
                         sh "cp -r /workspace/* ."
                         sh 'terraform --version'
                     }
