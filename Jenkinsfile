@@ -1,22 +1,54 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = 'img-tf'
-    }
+   
 
     stages {
-        stage('Build Docker Image') {
+        stage('Pull and Run Terraform Docker Image') {
+            steps {
+                // Define the Docker image name and tag
+                def dockerImage = 'hashicorp/terraform:latest'
+
+                // Pull the Docker image from Docker Hub
+                sh "docker pull $dockerImage"
+
+                // Run a Docker container using the pulled image
+                sh "docker run -it --rm $dockerImage terraform --version"
+            }
+        }
+
+        stage('Code Checkout') {
             steps {
                 script {
-                    withCredentials([
-                        [$class: 'AmazonWebServicesCredentialsBinding',
-                        credentialsId: 'aws-secret-key',
-                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
-                       
-                    ]) {
-                        sh "docker build -t ${DOCKER_IMAGE} --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} --build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} ."
+                    checkout(
+                        scm: [
+                            $class: 'GitSCM',
+                            branches: [[name: '*/main']],
+                            userRemoteConfigs: [[
+                                credentialsId: 'github-access-token-1',
+                                url: 'https://github.com/JozzRayan/tf-sample.git'
+                            ]]
+                        ]
+                    )
+                }
+            }
+        }
+
+        stage('Terraform Infra') {
+            steps {
+                script {
+                    def action = params.ACTION
+
+                    // Navigate to the Dev directory and run Terraform commands with AWS credentials
+                    dir('Environment/Dev') {
+                        sh 'terraform init'
+                        sh 'terraform plan'
+
+                        if (action == 'deploy') {
+                            sh 'terraform apply -auto-approve'
+                        } else if (action == 'destroy') {
+                            sh 'terraform destroy -auto-approve'
+                        }
                     }
                 }
             }
