@@ -13,7 +13,7 @@ pipeline {
                 sh "docker pull hashicorp/terraform:latest"
 
                 // Run a Docker container using the pulled image
-                sh "docker run -it --rm hashicorp/terraform:latest terraform --version"
+                sh "docker run -it --rm hashicorp/terraform:latest  --version"
             }
         }
 
