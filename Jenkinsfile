@@ -22,7 +22,8 @@ pipeline {
         stage('Pull and Run Terraform Docker Image') {
             steps {
                 script {
-                    docker.image('hashicorp/terraform:latest').inside('-v /usr/local/bin:/usr/local/bin', '--entrypoint', '') { c ->
+                    def terraformImage = docker.image('hashicorp/terraform:latest')
+                    terraformImage.inside('-v /usr/local/bin:/usr/local/bin --entrypoint ""') { c ->
                         /* Run Terraform commands here */
                         sh 'terraform --version'
                     }
