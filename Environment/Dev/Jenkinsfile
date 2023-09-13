@@ -1,4 +1,25 @@
-stage('Pull and Run Terraform Docker Image') {
+pipeline {
+    agent any
+
+    stages {
+        stage('Code Checkout') {
+            steps {
+                script {
+                    checkout(
+                        scm: [
+                            $class: 'GitSCM',
+                            branches: [[name: '*/main']],
+                            userRemoteConfigs: [[
+                                credentialsId: 'github-access-token-1',
+                                url: 'https://github.com/JozzRayan/Sample-repo.git'
+                            ]]
+                        ]
+                    )
+                }
+            }
+        }
+
+        stage('Pull and Run Terraform Docker Image') {
     steps {
         script {
             // Define the Nexus Docker registry URL and image name
@@ -30,6 +51,17 @@ stage('Pull and Run Terraform Docker Image') {
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+
+        stage('Remove Terraform docker image') {
+            steps {
+                script {
+                    sh 'docker rmi alertnow-docker-agents/hashicorp/alertnow-infra-terraform:latest'
                 }
             }
         }
