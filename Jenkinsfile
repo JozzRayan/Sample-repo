@@ -28,6 +28,12 @@ pipeline {
                         sh 'terraform --version'
                         sh 'terraform init'
                         sh 'terraform plan'
+
+                        if (action == 'deploy') {
+                            sh 'terraform apply -auto-approve'
+                        } else if (action == 'destroy') {
+                            sh 'terraform destroy -auto-approve'
+                        }
                     }
                 }
             }
