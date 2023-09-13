@@ -20,27 +20,27 @@ pipeline {
         }
 
         stage('Pull and Run Terraform Docker Image') {
-            steps {
-                script {
-                    def terraformImage = docker.image('hashicorp/terraform:latest')
-                    dir('Environment/Dev'){
-                    terraformImage.inside('-v $PWD:/terraform-project --entrypoint ""') { c ->
-                        /* Run Terraform commands here */
-                        sh 'terraform --version'
-                        sh 'terraform init'
-                        sh 'terraform plan'
+    steps {
+        script {
+           
+            def terraformImage = docker.image('nexus.an.opsnow.com/alertnow-docker-agents/hashicorp/alertnow-infra-terraform:latest')
+            dir('Environment/Dev') {
+                terraformImage.inside('-v $PWD:/terraform-project --entrypoint ""') { c ->
+                    /* Run Terraform commands here */
+                    sh 'terraform --version'
+                    sh 'terraform init'
+                    sh 'terraform plan'
 
-                        if (action == 'deploy') {
-                            sh 'terraform apply -auto-approve'
-                        } else if (action == 'destroy') {
-                            sh 'terraform destroy -auto-approve'
-                        }
-
-                    }
+                    if (action == 'deploy') {
+                        sh 'terraform apply -auto-approve'
+                    } else if (action == 'destroy') {
+                        sh 'terraform destroy -auto-approve'
                     }
                 }
             }
         }
+    }
+}
 
         stage('Remove Terraform docker image') {
             steps {
