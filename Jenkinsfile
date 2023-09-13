@@ -23,32 +23,34 @@ pipeline {
             steps {
                 script {
                     def terraformImage = docker.image('hashicorp/terraform:latest')
-                    terraformImage.inside('-v /usr/local/bin:/usr/local/bin --entrypoint ""') { c ->
+                    terraformImage.inside('-v $PWD:/terraform-project --entrypoint ""') { c ->
                         /* Run Terraform commands here */
                         sh 'terraform --version'
+                        sh 'terraform -init'
+                        sh 'terraform -plan'
                     }
                 }
             }
         }
 
-        stage('Terraform Infra') {
-            steps {
-                script {
-                    def action = params.ACTION
+        // stage('Terraform Infra') {
+        //     steps {
+        //         script {
+        //             def action = params.ACTION
 
-                    // Navigate to the Dev directory and run Terraform commands with AWS credentials
-                    dir('.'){
-                        sh 'terraform init'
-                        sh 'terraform plan'
+        //             // Navigate to the Dev directory and run Terraform commands with AWS credentials
+        //             dir('.'){
+        //                 sh 'terraform init'
+        //                 sh 'terraform plan'
 
-                        if (action == 'deploy') {
-                            sh 'terraform apply -auto-approve'
-                        } else if (action == 'destroy') {
-                            sh 'terraform destroy -auto-approve'
-                        }
-                    }
-                }
-            }
-        }
+        //                 if (action == 'deploy') {
+        //                     sh 'terraform apply -auto-approve'
+        //                 } else if (action == 'destroy') {
+        //                     sh 'terraform destroy -auto-approve'
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
     }
 }
