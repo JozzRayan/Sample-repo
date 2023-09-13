@@ -34,29 +34,19 @@ pipeline {
                         } else if (action == 'destroy') {
                             sh 'terraform destroy -auto-approve'
                         }
+
+                        
                     }
                 }
             }
         }
 
-        // stage('Terraform Infra') {
-        //     steps {
-        //         script {
-        //             def action = params.ACTION
-
-        //             // Navigate to the Dev directory and run Terraform commands with AWS credentials
-        //             dir('.'){
-        //                 sh 'terraform init'
-        //                 sh 'terraform plan'
-
-        //                 if (action == 'deploy') {
-        //                     sh 'terraform apply -auto-approve'
-        //                 } else if (action == 'destroy') {
-        //                     sh 'terraform destroy -auto-approve'
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Remove Terraform docker image') {
+            steps {
+                script {
+                    sh 'docker rmi hashicorp/terraform:latest'
+                }
+            }
+        }
     }
 }
