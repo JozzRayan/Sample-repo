@@ -26,8 +26,8 @@ pipeline {
                     terraformImage.inside('-v $PWD:/terraform-project --entrypoint ""') { c ->
                         /* Run Terraform commands here */
                         sh 'terraform --version'
-                        sh 'terraform -init'
-                        sh 'terraform -plan'
+                        sh 'terraform init'
+                        sh 'terraform plan'
                     }
                 }
             }
