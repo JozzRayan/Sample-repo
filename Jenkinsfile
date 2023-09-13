@@ -37,7 +37,8 @@ pipeline {
                     def action = params.ACTION
 
                     // Navigate to the Dev directory and run Terraform commands with AWS credentials
-                    dir('Environment/Dev') {
+                    // dir('Environment/Dev')
+                     {
                         sh 'terraform init'
                         sh 'terraform plan'
 
