@@ -34,7 +34,7 @@ pipeline {
                 passwordVariable: 'DOCKER_PASSWORD'
             ]]) {
                 // Perform Docker login
-                docker.withRegistry(nexusRegistryUrl, 'docker-credentials-id') {
+                docker.withRegistry(nexusRegistryUrl, 'nexus') {
                     // Pull the Docker image
                     def terraformImage = docker.image(nexusImageName)
                     dir('Environment/Dev') {
