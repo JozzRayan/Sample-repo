@@ -26,25 +26,25 @@ pipeline {
                     def nexusRegistryUrl = 'https://nexus.an.opsnow.com'
                     def nexusImageName = 'alertnow-docker-agents/hashicorp/alertnow-infra-terraform:latest'
 
-                    // Define Docker credentials for Nexus
-                    def dockerCredentials = credentials('nexus')
+                    // Authenticate Docker with Nexus using 'nexus' credentials
+                    withCredentials([[
+                        $class: 'UsernamePasswordMultiBinding',
+                        credentialsId: 'nexus',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    ]]) {
+                        def terraformImage = docker.image(nexusImageName)
+                        dir('Environment/Dev') {
+                            terraformImage.inside('-v $PWD:/terraform-project --entrypoint ""') { c ->
+                                /* Run Terraform commands here */
+                                sh 'terraform --version'
+                                sh 'terraform init'
+                                sh 'terraform plan'
 
-                    // Authenticate Docker with Nexus
-                    withCredentials([dockerCredentials]) {
-                        docker.withRegistry(nexusRegistryUrl, 'docker-credentials-id') {
-                            def terraformImage = docker.image(nexusImageName)
-                            dir('Environment/Dev') {
-                                terraformImage.inside('-v $PWD:/terraform-project --entrypoint ""') { c ->
-                                    /* Run Terraform commands here */
-                                    sh 'terraform --version'
-                                    sh 'terraform init'
-                                    sh 'terraform plan'
-
-                                    if (action == 'deploy') {
-                                        sh 'terraform apply -auto-approve'
-                                    } else if (action == 'destroy') {
-                                        sh 'terraform destroy -auto-approve'
-                                    }
+                                if (action == 'deploy') {
+                                    sh 'terraform apply -auto-approve'
+                                } else if (action == 'destroy') {
+                                    sh 'terraform destroy -auto-approve'
                                 }
                             }
                         }
