@@ -11,7 +11,7 @@ pipeline {
                             branches: [[name: '*/main']],
                             userRemoteConfigs: [[
                                 credentialsId: 'github-access-token-1',
-                                url: 'https://github.com/JozzRayan/tf-sample.git'
+                                url: 'https://github.com/JozzRayan/Sample-repo.git'
                             ]]
                         ]
                     )
