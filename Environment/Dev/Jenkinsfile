@@ -61,6 +61,7 @@ pipeline {
         stage('Remove Terraform docker image') {
             steps {
                 script {
+                    // Explicitly remove the Docker image using the full name
                     sh 'docker rmi alertnow-docker-agents/hashicorp/alertnow-infra-terraform:latest'
                 }
             }
