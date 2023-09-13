@@ -23,7 +23,7 @@ pipeline {
             steps {
                 script {
                     def terraformImage = docker.image('hashicorp/terraform:latest')
-                    dir('Environment/Dev')
+                    dir('Environment/Dev'){
                     terraformImage.inside('-v $PWD:/terraform-project --entrypoint ""') { c ->
                         /* Run Terraform commands here */
                         sh 'terraform --version'
@@ -36,7 +36,7 @@ pipeline {
                             sh 'terraform destroy -auto-approve'
                         }
 
-                        
+                    }
                     }
                 }
             }
