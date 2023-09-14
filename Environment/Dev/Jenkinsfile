@@ -20,33 +20,70 @@ pipeline {
         }
 
         stage('Pull and Run Terraform Docker Image') {
-             steps {
+            steps {
                 script {
-                     // Define the Nexus Docker registry URL and image name
-                     def nexusRegistryUrl = 'https://nexus.an.opsnow.com'
-                     def nexusImageName = 'alertnow-docker-agents/hashicorp/alertnow-infra-terraform:latest'
+                    // Define the Nexus Docker registry URL and image name
+                    def nexusRegistryUrl = 'https://nexus.an.opsnow.com'
+                    def nexusImageName = 'alertnow-docker-agents/hashicorp/alertnow-infra-terraform:latest'
 
-                         // Authenticate Docker with Nexus using 'nexus' credentials
-                          withCredentials([[
-                          $class: 'UsernamePasswordMultiBinding',
-                          credentialsId: 'nexus',
-                          usernameVariable: 'DOCKER_USERNAME',
-                          passwordVariable: 'DOCKER_PASSWORD'
-                         ]]) {
-                          // Perform Docker login
-                         docker.withRegistry(nexusRegistryUrl, 'nexus') {
-                         // Pull the Docker image
-                        def terraformImage = docker.image(nexusImageName)
-                          dir('Environment/Dev') {
-                            terraformImage.inside('-v $PWD:/terraform-project --entrypoint ""') { c ->
-                               /* Run Terraform commands here */
-                               sh 'terraform --version'
-                              sh 'terraform init'
-                              sh 'terraform plan'
+                    // Authenticate Docker with Nexus using 'nexus' credentials
+                    withCredentials([
+                        [
+                            $class: 'UsernamePasswordMultiBinding',
+                            credentialsId: 'nexus',
+                            usernameVariable: 'DOCKER_USERNAME',
+                            passwordVariable: 'DOCKER_PASSWORD'
+                        ]
+                    ]) {
+                        // Perform Docker login
+                        docker.withRegistry(nexusRegistryUrl, 'nexus') {
+                            // Pull the Docker image
+                            def terraformImage = docker.image(nexusImageName)
+                            dir('Environment/Dev') {
+                                terraformImage.inside('-v $PWD:/terraform-project --entrypoint ""') { c ->
+                                    /* Run Terraform commands here */
+                                    sh 'terraform --version'
+                                    sh 'terraform init'
+                                    sh 'terraform plan'
 
-                                if (action == 'deploy') {
-                                   sh 'terraform apply -auto-approve'
-                                } else if (action == 'destroy') {
+                                    if (action == 'deploy') {
+                                        sh 'terraform apply -auto-approve'
+                                    } else if (action == 'destroy') {
+                                        sh 'terraform destroy -auto-approve'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Deploy Terraform Infrastructure on AWS') {
+            steps {
+                script {
+                    // Define AWS credentials ID (add your AWS credentials to Jenkins)
+                    def awsCredentialsId = 'aws-secret-key'
+
+                    // Configure AWS CLI with Jenkins credentials
+                    withCredentials([
+                        [
+                            $class: 'AmazonWebServicesCredentialsBinding',
+                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                            credentialsId: awsCredentialsId
+                        ]
+                    ]) {
+                        dir('Environment/Dev') {
+                            // Initialize Terraform
+                            sh 'terraform init'
+
+                            // Plan Terraform changes
+                            sh 'terraform plan'
+
+                            if (action == 'deploy') {
+                                sh 'terraform apply -auto-approve'
+                            } else if (action == 'destroy') {
                                 sh 'terraform destroy -auto-approve'
                             }
                         }
@@ -54,40 +91,6 @@ pipeline {
                 }
             }
         }
-    }
-}
-
-         stage('Deploy Terraform Infrastructure on AWS') {
-            steps {
-                script {
-                    // Define AWS credentials ID (add your AWS credentials to Jenkins)
-                    def awsCredentialsId = 'aws-secret-key'
-
-                    // Configure AWS CLI with Jenkins credentials
-                    withCredentials([[
-                        $class: 'AmazonWebServicesCredentialsBinding',
-                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                        credentialsId: awsCredentialsId
-                    ]]) {
-                        dir('Environment/Dev') {
-                            // Initialize Terraform
-                            sh 'terraform init'
-
-                            // Plan Terraform changes
-                            sh 'terraform plan'
-
-                            if (action == 'deploy') {
-                                sh 'terraform apply -auto-approve'
-                            } else if (action == 'destroy') {
-                                sh 'terraform destroy -auto-approve'
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
 
         stage('Remove Terraform docker image') {
             steps {
