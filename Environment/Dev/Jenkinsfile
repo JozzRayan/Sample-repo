@@ -25,7 +25,7 @@ pipeline {
                     // Define the Nexus Docker registry URL and image name
                     def nexusRegistryUrl = 'https://nexus.an.opsnow.com'
                     def nexusImageName = 'alertnow-docker-agents/hashicorp/alertnow-infra-terraform:latest'
-                    def awsCredentialsId = 'aws-secret-key'
+                    def awsCredentialsId = 'dev'
 
                     // Authenticate Docker with Nexus using 'nexus' credentials
                     withCredentials([
