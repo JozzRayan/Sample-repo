@@ -18,7 +18,7 @@ provider "aws" {
 # Terraform Backend Configuration
 terraform {
   backend "s3" {
-    bucket = "an-tf-bckup"
+    bucket = "my-tf-bucket14"
     key    = "tf-code/terraform.tfstate"
     region = "ap-northeast-2"
   }
