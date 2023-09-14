@@ -1,47 +1,45 @@
 pipeline {
     agent any
 
+    environment {
+        TERRAFORM_IMAGE = 'alertnow-docker-agents/hashicorp/alertnow-infra-terraform:latest'
+        TERRAFORM_WORKDIR = 'Environment/Dev'
+        AWS_CREDENTIALS_ID = 'aws-secret-key'
+    }
+
     stages {
         stage('Code Checkout') {
             steps {
-                script {
-                    checkout(
-                        scm: [
-                            $class: 'GitSCM',
-                            branches: [[name: '*/main']],
-                            userRemoteConfigs: [[
-                                credentialsId: 'github-access-token-1',
-                                url: 'https://github.com/JozzRayan/Sample-repo.git'
-                            ]]
-                        ]
-                    )
-                }
+                checkout(
+                    scm: [
+                        $class: 'GitSCM',
+                        branches: [[name: '*/main']],
+                        userRemoteConfigs: [[
+                            credentialsId: 'github-access-token-1',
+                            url: 'https://github.com/JozzRayan/Sample-repo.git'
+                        ]]
+                    ]
+                )
             }
         }
 
         stage('Pull and Run Terraform Docker Image') {
             steps {
                 script {
-                    // Define the Nexus Docker registry URL and image name
-                    def nexusRegistryUrl = 'https://nexus.an.opsnow.com'
-                    def nexusImageName = 'alertnow-docker-agents/hashicorp/alertnow-infra-terraform:latest'
+                    withCredentials([[
+                        $class: 'UsernamePasswordMultiBinding',
+                        credentialsId: 'nexus',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    ]]) {
+                        // Authenticate Docker with Nexus using 'nexus' credentials
+                        docker.withRegistry('https://nexus.an.opsnow.com', 'nexus') {
+                            // Pull the Terraform Docker image
+                            def terraformImage = docker.image(env.TERRAFORM_IMAGE)
 
-                    // Authenticate Docker with Nexus using 'nexus' credentials
-                    withCredentials([
-                        [
-                            $class: 'UsernamePasswordMultiBinding',
-                            credentialsId: 'nexus',
-                            usernameVariable: 'DOCKER_USERNAME',
-                            passwordVariable: 'DOCKER_PASSWORD'
-                        ]
-                    ]) {
-                        // Perform Docker login
-                        docker.withRegistry(nexusRegistryUrl, 'nexus') {
-                            // Pull the Docker image
-                            def terraformImage = docker.image(nexusImageName)
-                            dir('Environment/Dev') {
+                            // Run Terraform commands
+                            dir(env.TERRAFORM_WORKDIR) {
                                 terraformImage.inside('-v $PWD:/terraform-project --entrypoint ""') { c ->
-                                    /* Run Terraform commands here */
                                     sh 'terraform --version'
                                     sh 'terraform init'
                                     sh 'terraform plan'
@@ -62,23 +60,15 @@ pipeline {
         stage('Deploy Terraform Infrastructure on AWS') {
             steps {
                 script {
-                    // Define AWS credentials ID (add your AWS credentials to Jenkins)
-                    def awsCredentialsId = 'aws-secret-key'
-
-                    // Configure AWS CLI with Jenkins credentials
-                    withCredentials([
-                        [
-                            $class: 'AmazonWebServicesCredentialsBinding',
-                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                            credentialsId: awsCredentialsId
-                        ]
-                    ]) {
-                        dir('Environment/Dev') {
-                            // Initialize Terraform
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                        credentialsId: env.AWS_CREDENTIALS_ID
+                    ]]) {
+                        // Initialize and apply Terraform for AWS
+                        dir(env.TERRAFORM_WORKDIR) {
                             sh 'terraform init'
-
-                            // Plan Terraform changes
                             sh 'terraform plan'
 
                             if (action == 'deploy') {
@@ -92,11 +82,11 @@ pipeline {
             }
         }
 
-        stage('Remove Terraform docker image') {
+        stage('Remove Terraform Docker Image') {
             steps {
                 script {
                     // Explicitly remove the Docker image using the full name
-                    sh 'docker rmi nexus.an.opsnow.com/alertnow-docker-agents/hashicorp/alertnow-infra-terraform:latest'
+                    sh "docker rmi ${env.TERRAFORM_IMAGE}"
                 }
             }
         }
