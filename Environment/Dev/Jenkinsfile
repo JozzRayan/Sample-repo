@@ -55,14 +55,9 @@ pipeline {
                             }
                         }
                     }
-                }
-            }
-        }
 
-        stage('Deploy Terraform Infrastructure on AWS') {
-            steps {
-                script {
-                    // Define AWS credentials ID (add your AWS credentials to Jenkins)
+                    
+                    // Define AWS credentials ID 
                     def awsCredentialsId = 'aws-secret-key'
 
                     // Configure AWS CLI with Jenkins credentials
@@ -75,10 +70,10 @@ pipeline {
                         ]
                     ]) {
                         dir('Environment/Dev') {
-                            // Initialize Terraform
+                            // Initialize Terraform (if not already initialized)
                             sh 'terraform init'
 
-                            // Plan Terraform changes
+                            // Plan Terraform changes (if needed)
                             sh 'terraform plan'
 
                             if (action == 'deploy') {
