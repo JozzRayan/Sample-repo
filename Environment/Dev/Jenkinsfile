@@ -34,19 +34,14 @@ pipeline {
                             credentialsId: 'nexus',
                             usernameVariable: 'DOCKER_USERNAME',
                             passwordVariable: 'DOCKER_PASSWORD'
-                        ]
-                       
-                    ])
-                     withCredentials([
+                        ],
                         [
                             $class: 'AmazonWebServicesCredentialsBinding',
                             accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                             secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
                             credentialsId: awsCredentialsId
                         ]
-                    ])
-                    
-                     {
+                    ]) {
                         // Perform Docker login
                         docker.withRegistry(nexusRegistryUrl, 'nexus') {
                             // Pull the Docker image
@@ -67,13 +62,11 @@ pipeline {
                             }
                         }
                     }
-
-                    
                 }
             }
         }
 
-        stage('Remove Terraform docker image') {
+        stage('Remove Terraform Docker Image') {
             steps {
                 script {
                     // Explicitly remove the Docker image using the full name
