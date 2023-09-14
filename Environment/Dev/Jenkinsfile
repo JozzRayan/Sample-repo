@@ -19,7 +19,7 @@ pipeline {
             }
         }
 
-        stage('Pull and Run Terraform Docker Image') {
+        stage('Pull Terraform Docker Image and deploy the infra') {
             steps {
                 script {
                     // Define the Nexus Docker registry URL and image name
