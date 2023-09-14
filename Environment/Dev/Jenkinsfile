@@ -25,6 +25,7 @@ pipeline {
                     // Define the Nexus Docker registry URL and image name
                     def nexusRegistryUrl = 'https://nexus.an.opsnow.com'
                     def nexusImageName = 'alertnow-docker-agents/hashicorp/alertnow-infra-terraform:latest'
+                    def awsCredentialsId = 'aws-secret-key'
 
                     // Authenticate Docker with Nexus using 'nexus' credentials
                     withCredentials([
@@ -34,7 +35,18 @@ pipeline {
                             usernameVariable: 'DOCKER_USERNAME',
                             passwordVariable: 'DOCKER_PASSWORD'
                         ]
-                    ]) {
+                       
+                    ])
+                     withCredentials([
+                        [
+                            $class: 'AmazonWebServicesCredentialsBinding',
+                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                            credentialsId: awsCredentialsId
+                        ]
+                    ])
+                    
+                     {
                         // Perform Docker login
                         docker.withRegistry(nexusRegistryUrl, 'nexus') {
                             // Pull the Docker image
@@ -57,32 +69,6 @@ pipeline {
                     }
 
                     
-                    // Define AWS credentials ID 
-                    def awsCredentialsId = 'aws-secret-key'
-
-                    // Configure AWS CLI with Jenkins credentials
-                    withCredentials([
-                        [
-                            $class: 'AmazonWebServicesCredentialsBinding',
-                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                            credentialsId: awsCredentialsId
-                        ]
-                    ]) {
-                        dir('Environment/Dev') {
-                            // Initialize Terraform (if not already initialized)
-                            sh 'terraform init'
-
-                            // Plan Terraform changes (if needed)
-                            sh 'terraform plan'
-
-                            if (action == 'deploy') {
-                                sh 'terraform apply -auto-approve'
-                            } else if (action == 'destroy') {
-                                sh 'terraform destroy -auto-approve'
-                            }
-                        }
-                    }
                 }
             }
         }
