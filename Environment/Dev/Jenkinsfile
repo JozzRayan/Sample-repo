@@ -50,7 +50,7 @@ pipeline {
                                 terraformImage.inside('-v $PWD:/terraform-project --entrypoint ""') { c ->
                                     /* Run Terraform commands here */
                                     sh 'terraform --version'
-                                    sh 'terraform init'
+                                    sh 'terraform init -reconfigure'
                                     sh 'terraform plan'
 
                                     if (action == 'deploy') {
